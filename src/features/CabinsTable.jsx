@@ -1,4 +1,5 @@
 import React from 'react';
+
 import { Table, Button, Popconfirm } from 'antd';
 
 const CabinsTable = ({ cabins, onEdit, onDelete }) => {

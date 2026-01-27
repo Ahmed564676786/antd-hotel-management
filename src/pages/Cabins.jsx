@@ -2,13 +2,25 @@ import React, { useState } from 'react';
 import { Button } from 'antd';
 import CabinsTable from '../features/CabinsTable';
 import CabinFormDrawer from '../features/CabinFormDrawer';
+import { useQuery } from '@tanstack/react-query';
+
+import {getCabins} from '../services/apiCabins'
 
 const CabinsPage = () => {
-  const [cabins, setCabins] = useState([
-    { id: 1, name: 'Lake View Cabin', maxCapacity: 6, minCapacity: 2, price: 150, discount: 10 },
-    { id: 2, name: 'Mountain Cabin', maxCapacity: 8, minCapacity: 3, price: 200, discount: 15 },
-    { id: 3, name: 'Forest Cabin', maxCapacity: 4, minCapacity: 1, price: 120, discount: 5 },
-  ]);
+
+
+   const {data:cabins,isLoading} = useQuery({
+
+          queryKey:['cabins'],
+          queryFn:getCabins
+   });
+
+
+  // const [cabins, setCabins] = useState([
+  //   { id: 1, name: 'Lake View Cabin', maxCapacity: 6, minCapacity: 2, price: 150, discount: 10 },
+  //   { id: 2, name: 'Mountain Cabin', maxCapacity: 8, minCapacity: 3, price: 200, discount: 15 },
+  //   { id: 3, name: 'Forest Cabin', maxCapacity: 4, minCapacity: 1, price: 120, discount: 5 },
+  // ]);
 
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [editingCabin, setEditingCabin] = useState(null);
