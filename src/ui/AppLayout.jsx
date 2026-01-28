@@ -7,6 +7,7 @@ import {
   UserOutlined,
   VideoCameraOutlined,
   UploadOutlined,
+  HomeOutlined,
 } from '@ant-design/icons';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 
@@ -36,9 +37,10 @@ const AppLayout = () => {
           <Menu.Item key="/cabins" icon={<VideoCameraOutlined />}>
             <Link to="/cabins">Cabins</Link>
           </Menu.Item>
-          <Menu.Item key="/uploads" icon={<UploadOutlined />}>
-            <Link to="/uploads">Uploads</Link>
+          <Menu.Item key="/bookings" icon={<HomeOutlined />}>
+            <Link to="/bookings">Booking</Link>
           </Menu.Item>
+      
         </Menu>
       </Sider>
 

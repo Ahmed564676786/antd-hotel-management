@@ -1,17 +1,31 @@
+
 import React, { useEffect } from 'react';
 import { Drawer, Form, Input, InputNumber, Button } from 'antd';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
+import { insertCabin } from '../services/apiCabins';
 
-const CabinFormDrawer = ({ visible, onClose, onSubmit, initialValues }) => {
+const CabinFormDrawer = ({ visible, onClose, initialValues }) => {
   const [form] = Form.useForm();
+  const queryClient = useQueryClient();
 
-  // Set form values when editing
   useEffect(() => {
     form.setFieldsValue(initialValues || {});
   }, [initialValues, form]);
 
+  const { mutate: addCabin, isLoading } = useMutation({
+    mutationFn: insertCabin,
+    onSuccess: () => {
+      toast.success('Cabin added successfully');
+      queryClient.invalidateQueries({ queryKey: ['cabins'] });
+      form.resetFields();
+      onClose();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
   const handleFinish = (values) => {
-    onSubmit(values);
-    form.resetFields();
+    addCabin(values);
   };
 
   const handleClose = () => {
@@ -30,7 +44,7 @@ const CabinFormDrawer = ({ visible, onClose, onSubmit, initialValues }) => {
           <Button onClick={handleClose} style={{ marginRight: 8 }}>
             Cancel
           </Button>
-          <Button type="primary" onClick={() => form.submit()}>
+          <Button type="primary" onClick={() => form.submit()} loading={isLoading}>
             {initialValues ? 'Update' : 'Add'}
           </Button>
         </div>
@@ -42,13 +56,13 @@ const CabinFormDrawer = ({ visible, onClose, onSubmit, initialValues }) => {
           label="Cabin Name"
           rules={[{ required: true, message: 'Please enter cabin name' }]}
         >
-          <Input placeholder="Cabin Name" />
+          <Input />
         </Form.Item>
 
         <Form.Item
           name="maxCapacity"
           label="Max Capacity"
-          rules={[{ required: true, message: 'Please enter max capacity' }]}
+          rules={[{ required: true }]}
         >
           <InputNumber min={1} style={{ width: '100%' }} />
         </Form.Item>
@@ -56,7 +70,7 @@ const CabinFormDrawer = ({ visible, onClose, onSubmit, initialValues }) => {
         <Form.Item
           name="minCapacity"
           label="Min Capacity"
-          rules={[{ required: true, message: 'Please enter min capacity' }]}
+          rules={[{ required: true }]}
         >
           <InputNumber min={1} style={{ width: '100%' }} />
         </Form.Item>
@@ -64,15 +78,15 @@ const CabinFormDrawer = ({ visible, onClose, onSubmit, initialValues }) => {
         <Form.Item
           name="price"
           label="Price"
-          rules={[{ required: true, message: 'Please enter price' }]}
+          rules={[{ required: true }]}
         >
-          <InputNumber min={0} style={{ width: '100%' }} prefix="$" />
+          <InputNumber min={0} prefix="$" style={{ width: '100%' }} />
         </Form.Item>
 
         <Form.Item
           name="discount"
           label="Discount (%)"
-          rules={[{ required: true, message: 'Please enter discount' }]}
+          rules={[{ required: true }]}
         >
           <InputNumber min={0} max={100} style={{ width: '100%' }} />
         </Form.Item>
