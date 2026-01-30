@@ -27,7 +27,7 @@ export async function deleteBooking(id) {
     const {data:bookings, error } = await supabase
                 .from('bookings')
                 .delete()
-                .eq('id', 'id')
+                .eq('id', id)
 
         if(error){
 
@@ -41,20 +41,35 @@ export async function deleteBooking(id) {
 
 export async function insertBooking(newBooking) {
 
-    // Insert a row
-    const { data, error } = await supabase
-        .from('bookings')
-        .insert([newBooking])
-        .select()
 
-    if(error){
+//     const newBooking2 = {
+//     startDate: "2026-02-01",
+//     endDate: "2026-02-05",
+//     numGuests: 2,
+//     cabinPrice: 150,
+//     extraPrice: 50,
+//     totalPrice: 50,
+//     status: "confirmed",
+//     hasBreakFast: true,
+//     isPaid: false,
+//     observations: "Near lake view",
+//     cabinId: 26
+//   };
 
-        throw new Error(error.message);
-    }
 
-    return data
+console.log(newBooking);
+
+  const { data, error } = await supabase
+    .from("bookings")
+    .insert([newBooking])  // must be an array of objects
+    .select();
+
+  if (error) throw new Error(error.message);
 
 
-    // console.log(newBooking);
+
+  return data;
+
+
     
 }

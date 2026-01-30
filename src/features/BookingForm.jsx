@@ -1,158 +1,3 @@
-// import {
-//   Form,
-//   Input,
-//   InputNumber,
-//   Button,
-//   DatePicker,
-//   Switch,
-//   Select,
-//   Spin,
-// } from "antd";
-// import { useEffect } from "react";
-// import { useMutation, useQuery } from "@tanstack/react-query";
-// import { getCabins } from "../services/apiCabins";
-// import { insertBooking } from "../services/apiBookings";
-
-// const { RangePicker } = DatePicker;
-
-// function BookingForm({ booking, onSave }) {
-//   const [form] = Form.useForm();
-
-//   const hasBreakfast = Form.useWatch("hasBreakfast", form);
-//   const cabinId = Form.useWatch("cabinId", form);
-
-
-//   const {isLoading:isBookingInserting,mutate:insertMutate} = useMutation({
-
-//         mutationKey:['booking'],
-//         mutationFn:insertBooking
-//   })
-
-//   // React Query to fetch cabins
-//   const { isLoading, data: cabins } = useQuery({
-//     queryKey: ["cabins"],
-//     queryFn: getCabins,
-//   });
-
-//   // Auto update prices when cabin or breakfast changes
-//   useEffect(() => {
-//     if (!cabins || !cabinId) return;
-
-//     const cabin = cabins.find((c) => c.id === cabinId);
-//     if (!cabin) return;
-
-//     const extraPrice = hasBreakfast ? cabin.breakfastPrice || 0 : 0;
-//     const totalPrice = (cabin.price || 0) + extraPrice;
-
-//     form.setFieldsValue({
-//       cabinPrice: cabin.price,
-//       extraPrice,
-//       totalPrice,
-//     });
-//   }, [cabinId, hasBreakfast, cabins, form]);
-
-//   const onFinish = (values) => {
-//     const payload = {
-//       ...values,
-//       id: booking ? booking.id : Date.now(),
-//       startDate: values.dates[0],
-//       endDate: values.dates[1],
-//     };
-
-//     delete payload.dates;
-//     onSave(payload);
-//   };
-
-//   if (isLoading) return <Spin />; // show loader while cabins load
-
-//   return (
-//     <Form
-//       layout="vertical"
-//       form={form}
-//       onFinish={onFinish}
-//       initialValues={
-//         booking && {
-//           ...booking,
-//           dates: [booking.startDate, booking.endDate],
-//         }
-//       }
-//     >
-//       {/* CABIN COMBOBOX */}
-//       <Form.Item
-//         name="cabinId"
-//         label="Cabin"
-//         rules={[{ required: true }]}
-//       >
-//         <Select
-//           showSearch
-//           placeholder="Select cabin"
-//           optionFilterProp="label"
-//           options={cabins?.map((c) => ({
-//             value: c.id,
-//             label: `${c.name} ($${c.price})`,
-//           })) || []} // fallback to empty array
-//         />
-//       </Form.Item>
-
-//       <Form.Item name="dates" label="Dates" rules={[{ required: true }]}>
-//         <RangePicker className="w-full" />
-//       </Form.Item>
-
-//       <Form.Item name="numGuests" label="Guests">
-//         <InputNumber min={1} className="w-full" />
-//       </Form.Item>
-
-//       <Form.Item name="cabinPrice" label="Cabin Price">
-//         <InputNumber disabled className="w-full" />
-//       </Form.Item>
-
-//       <Form.Item
-//         name="hasBreakfast"
-//         label="Breakfast"
-//         valuePropName="checked"
-//       >
-//         <Switch />
-//       </Form.Item>
-
-//       <Form.Item name="extraPrice" label="Extra Price">
-//         <InputNumber disabled className="w-full" />
-//       </Form.Item>
-
-//       <Form.Item name="totalPrice" label="Total Price">
-//         <InputNumber disabled className="w-full" />
-//       </Form.Item>
-
-//       <Form.Item name="status" label="Status">
-//         <Select
-//           options={[
-//             { value: "unconfirmed", label: "Unconfirmed" },
-//             { value: "checked-in", label: "Checked In" },
-//             { value: "checked-out", label: "Checked Out" },
-//           ]}
-//         />
-//       </Form.Item>
-
-//       <Form.Item name="isPaid" label="Paid" valuePropName="checked">
-//         <Switch />
-//       </Form.Item>
-
-//       <Form.Item name="observations" label="Observations">
-//         <Input.TextArea rows={3} />
-//       </Form.Item>
-
-
-
-//       <Button type="primary" htmlType="submit" block>
-//         {booking ? "Update Booking" : "Create Booking"}
-//       </Button>
-//     </Form>
-//   );
-// }
-
-// export default BookingForm;
-
-
-
 import {
   Form,
   Input,
@@ -162,6 +7,7 @@ import {
   Switch,
   Select,
   Spin,
+  message,
 } from "antd";
 import { useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -173,26 +19,31 @@ const { RangePicker } = DatePicker;
 function BookingForm({ booking, onSave }) {
   const [form] = Form.useForm();
 
+  // Watch these for auto price calculation
   const hasBreakfast = Form.useWatch("hasBreakfast", form);
   const cabinId = Form.useWatch("cabinId", form);
 
   /* =======================
-     INSERT BOOKING
-  ======================= */
-  const { isLoading: isBookingInserting, mutate: insertMutate } =
-    useMutation({
-      mutationFn: insertBooking,
-      onSuccess: (newBooking) => {
-        onSave(newBooking);
-      },
-    });
-
-  /* =======================
      FETCH CABINS
   ======================= */
-  const { isLoading, data: cabins } = useQuery({
+  const { isLoading: isCabinsLoading, data: cabins } = useQuery({
     queryKey: ["cabins"],
     queryFn: getCabins,
+  });
+
+  /* =======================
+     INSERT BOOKING MUTATION
+  ======================= */
+  const { isLoading: isBookingInserting, mutate: insertMutate } = useMutation({
+    mutationFn: insertBooking,
+    onSuccess: (newBooking) => {
+      message.success("Booking saved successfully!");
+      onSave(newBooking); // pass inserted data to parent
+    },
+    onError: (error) => {
+      console.error("Booking insert failed:", error);
+      message.error(error.message || "Failed to save booking");
+    },
   });
 
   /* =======================
@@ -215,29 +66,33 @@ function BookingForm({ booking, onSave }) {
   }, [cabinId, hasBreakfast, cabins, form]);
 
   /* =======================
-     SUBMIT HANDLER
+     FORM SUBMIT HANDLER
   ======================= */
   const onFinish = (values) => {
+    if (!values.dates || values.dates.length !== 2) {
+      message.error("Please select start and end dates");
+      return;
+    }
+
     const payload = {
       ...values,
-      startDate: values.dates[0],
-      endDate: values.dates[1],
+      startDate: values.dates[0].format("YYYY-MM-DD"),
+      endDate: values.dates[1].format("YYYY-MM-DD"),
     };
 
     delete payload.dates;
 
-    // ✅ CREATE
+    // If creating a new booking
     if (!booking) {
       insertMutate(payload);
-      // alert('Hi');
       return;
     }
 
-    // ✅ UPDATE (local)
+    // If updating an existing booking locally
     onSave({ ...payload, id: booking.id });
   };
 
-  if (isLoading) return <Spin />;
+  if (isCabinsLoading) return <Spin size="large" />;
 
   return (
     <Form
@@ -251,11 +106,11 @@ function BookingForm({ booking, onSave }) {
         }
       }
     >
-      {/* CABIN */}
+      {/* CABIN SELECT */}
       <Form.Item
         name="cabinId"
         label="Cabin"
-        rules={[{ required: true }]}
+        rules={[{ required: true, message: "Please select a cabin" }]}
       >
         <Select
           showSearch
@@ -270,35 +125,46 @@ function BookingForm({ booking, onSave }) {
         />
       </Form.Item>
 
-      <Form.Item name="dates" label="Dates" rules={[{ required: true }]}>
+      {/* DATE RANGE */}
+      <Form.Item
+        name="dates"
+        label="Dates"
+        rules={[{ required: true, message: "Please select booking dates" }]}
+      >
         <RangePicker className="w-full" />
       </Form.Item>
 
-      <Form.Item name="numGuests" label="Guests">
+      {/* NUMBER OF GUESTS */}
+      <Form.Item name="numGuests" label="Guests" rules={[{ required: true }]}>
         <InputNumber min={1} className="w-full" />
       </Form.Item>
 
+      {/* CABIN PRICE */}
       <Form.Item name="cabinPrice" label="Cabin Price">
         <InputNumber disabled className="w-full" />
       </Form.Item>
 
+      {/* BREAKFAST */}
       <Form.Item
-        name="hasBreakfast"
+        name="hasBreakFast"
         label="Breakfast"
         valuePropName="checked"
       >
         <Switch />
       </Form.Item>
 
+      {/* EXTRA PRICE */}
       <Form.Item name="extraPrice" label="Extra Price">
         <InputNumber disabled className="w-full" />
       </Form.Item>
 
+      {/* TOTAL PRICE */}
       <Form.Item name="totalPrice" label="Total Price">
         <InputNumber disabled className="w-full" />
       </Form.Item>
 
-      <Form.Item name="status" label="Status">
+      {/* STATUS */}
+      <Form.Item name="status" label="Status" rules={[{ required: true }]}>
         <Select
           options={[
             { value: "unconfirmed", label: "Unconfirmed" },
@@ -308,14 +174,17 @@ function BookingForm({ booking, onSave }) {
         />
       </Form.Item>
 
+      {/* PAID */}
       <Form.Item name="isPaid" label="Paid" valuePropName="checked">
         <Switch />
       </Form.Item>
 
+      {/* OBSERVATIONS */}
       <Form.Item name="observations" label="Observations">
         <Input.TextArea rows={3} />
       </Form.Item>
 
+      {/* SUBMIT BUTTON */}
       <Button
         type="primary"
         htmlType="submit"
