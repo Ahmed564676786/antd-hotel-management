@@ -13,38 +13,58 @@ import { useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { getCabins } from "../services/apiCabins";
 import { insertBooking } from "../services/apiBookings";
+import dayjs from "dayjs";
 
 const { RangePicker } = DatePicker;
 
 function BookingForm({ booking, onSave }) {
   const [form] = Form.useForm();
 
-  // Watch these for auto price calculation
+  /* =======================
+     WATCHED FIELDS
+  ======================= */
   const hasBreakfast = Form.useWatch("hasBreakfast", form);
   const cabinId = Form.useWatch("cabinId", form);
 
   /* =======================
      FETCH CABINS
   ======================= */
-  const { isLoading: isCabinsLoading, data: cabins } = useQuery({
+  const { isLoading: cabinsLoading, data: cabins } = useQuery({
     queryKey: ["cabins"],
     queryFn: getCabins,
   });
 
   /* =======================
-     INSERT BOOKING MUTATION
+     INSERT BOOKING
   ======================= */
-  const { isLoading: isBookingInserting, mutate: insertMutate } = useMutation({
+  const { isLoading: saving, mutate } = useMutation({
     mutationFn: insertBooking,
-    onSuccess: (newBooking) => {
-      message.success("Booking saved successfully!");
-      onSave(newBooking); // pass inserted data to parent
+    onSuccess: () => {
+      message.success("Booking saved successfully");
+      onSave(); // invalidate + close drawer
     },
-    onError: (error) => {
-      console.error("Booking insert failed:", error);
-      message.error(error.message || "Failed to save booking");
+    onError: (err) => {
+      message.error(err.message || "Failed to save booking");
     },
   });
+
+  /* =======================
+     SET FORM VALUES (EDIT)
+  ======================= */
+  useEffect(() => {
+    if (!booking) {
+      form.resetFields();
+      return;
+    }
+
+    form.setFieldsValue({
+      ...booking,
+      dates: [
+        dayjs(booking.startDate),
+        dayjs(booking.endDate),
+      ],
+    });
+  }, [booking, form]);
 
   /* =======================
      AUTO PRICE CALCULATION
@@ -63,17 +83,12 @@ function BookingForm({ booking, onSave }) {
       extraPrice,
       totalPrice,
     });
-  }, [cabinId, hasBreakfast, cabins, form]);
+  }, [cabins, cabinId, hasBreakfast, form]);
 
   /* =======================
-     FORM SUBMIT HANDLER
+     SUBMIT HANDLER
   ======================= */
   const onFinish = (values) => {
-    if (!values.dates || values.dates.length !== 2) {
-      message.error("Please select start and end dates");
-      return;
-    }
-
     const payload = {
       ...values,
       startDate: values.dates[0].format("YYYY-MM-DD"),
@@ -82,60 +97,54 @@ function BookingForm({ booking, onSave }) {
 
     delete payload.dates;
 
-    // If creating a new booking
+    // CREATE
     if (!booking) {
-      insertMutate(payload);
+      mutate(payload);
       return;
     }
 
-    // If updating an existing booking locally
+    // EDIT (local update only for now)
     onSave({ ...payload, id: booking.id });
   };
 
-  if (isCabinsLoading) return <Spin size="large" />;
+  if (cabinsLoading) return <Spin />;
 
   return (
     <Form
       layout="vertical"
       form={form}
       onFinish={onFinish}
-      initialValues={
-        booking && {
-          ...booking,
-          dates: [booking.startDate, booking.endDate],
-        }
-      }
     >
-      {/* CABIN SELECT */}
+      {/* CABIN */}
       <Form.Item
         name="cabinId"
         label="Cabin"
-        rules={[{ required: true, message: "Please select a cabin" }]}
+        rules={[{ required: true }]}
       >
         <Select
-          showSearch
           placeholder="Select cabin"
-          optionFilterProp="label"
-          options={
-            cabins?.map((c) => ({
-              value: c.id,
-              label: `${c.name} ($${c.price})`,
-            })) || []
-          }
+          options={cabins.map((c) => ({
+            value: c.id,
+            label: `${c.name} ($${c.price})`,
+          }))}
         />
       </Form.Item>
 
-      {/* DATE RANGE */}
+      {/* DATES */}
       <Form.Item
         name="dates"
         label="Dates"
-        rules={[{ required: true, message: "Please select booking dates" }]}
+        rules={[{ required: true }]}
       >
         <RangePicker className="w-full" />
       </Form.Item>
 
-      {/* NUMBER OF GUESTS */}
-      <Form.Item name="numGuests" label="Guests" rules={[{ required: true }]}>
+      {/* GUESTS */}
+      <Form.Item
+        name="numGuests"
+        label="Guests"
+        rules={[{ required: true }]}
+      >
         <InputNumber min={1} className="w-full" />
       </Form.Item>
 
@@ -146,25 +155,29 @@ function BookingForm({ booking, onSave }) {
 
       {/* BREAKFAST */}
       <Form.Item
-        name="hasBreakFast"
+        name="hasBreakfast"
         label="Breakfast"
         valuePropName="checked"
       >
         <Switch />
       </Form.Item>
 
-      {/* EXTRA PRICE */}
+      {/* EXTRA */}
       <Form.Item name="extraPrice" label="Extra Price">
         <InputNumber disabled className="w-full" />
       </Form.Item>
 
-      {/* TOTAL PRICE */}
+      {/* TOTAL */}
       <Form.Item name="totalPrice" label="Total Price">
         <InputNumber disabled className="w-full" />
       </Form.Item>
 
       {/* STATUS */}
-      <Form.Item name="status" label="Status" rules={[{ required: true }]}>
+      <Form.Item
+        name="status"
+        label="Status"
+        rules={[{ required: true }]}
+      >
         <Select
           options={[
             { value: "unconfirmed", label: "Unconfirmed" },
@@ -175,21 +188,25 @@ function BookingForm({ booking, onSave }) {
       </Form.Item>
 
       {/* PAID */}
-      <Form.Item name="isPaid" label="Paid" valuePropName="checked">
+      <Form.Item
+        name="isPaid"
+        label="Paid"
+        valuePropName="checked"
+      >
         <Switch />
       </Form.Item>
 
-      {/* OBSERVATIONS */}
+      {/* NOTES */}
       <Form.Item name="observations" label="Observations">
         <Input.TextArea rows={3} />
       </Form.Item>
 
-      {/* SUBMIT BUTTON */}
+      {/* SUBMIT */}
       <Button
         type="primary"
         htmlType="submit"
+        loading={saving}
         block
-        loading={isBookingInserting}
       >
         {booking ? "Update Booking" : "Create Booking"}
       </Button>

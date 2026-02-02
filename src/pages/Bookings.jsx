@@ -269,6 +269,13 @@ function Bookings() {
      SAVE (CREATE / EDIT)
   ======================= */
   const handleSave = (booking) => {
+
+     queryClient.invalidateQueries({ queryKey: ["bookings"] });
+  queryClient.invalidateQueries({ queryKey: ["cabins"] });
+
+
+
+    
     let updated;
 
     if (editingBooking) {
@@ -285,6 +292,9 @@ function Bookings() {
     setOpen(false);
     setEditingBooking(null);
   };
+
+
+  
 
   /* =======================
      DELETE HANDLER
