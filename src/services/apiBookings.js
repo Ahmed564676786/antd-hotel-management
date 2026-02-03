@@ -57,12 +57,15 @@ export async function insertBooking(newBooking) {
 //   };
 
 
-console.log(newBooking);
+  console.log(newBooking);
 
   const { data, error } = await supabase
     .from("bookings")
     .insert([newBooking])  // must be an array of objects
-    .select();
+    .select()
+    .single();
+
+    
 
   if (error) throw new Error(error.message);
 

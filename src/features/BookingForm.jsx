@@ -89,22 +89,31 @@ function BookingForm({ booking, onSave }) {
      SUBMIT HANDLER
   ======================= */
   const onFinish = (values) => {
-    const payload = {
-      ...values,
+
+
+    const { dates, ...bookingData } = values;
+
+     const payload = {
+      ...bookingData,
       startDate: values.dates[0].format("YYYY-MM-DD"),
       endDate: values.dates[1].format("YYYY-MM-DD"),
     };
 
-    delete payload.dates;
 
-    // CREATE
-    if (!booking) {
-      mutate(payload);
-      return;
-    }
+    onSave(payload);
 
-    // EDIT (local update only for now)
-    onSave({ ...payload, id: booking.id });
+
+   
+    // delete payload.dates;
+
+    // // CREATE
+    // if (!booking) {
+    //   mutate(payload);
+    //   return;
+    // }
+
+    // // EDIT (local update only for now)
+    // onSave({ ...payload, id: booking.id });
   };
 
   if (cabinsLoading) return <Spin />;
@@ -155,7 +164,7 @@ function BookingForm({ booking, onSave }) {
 
       {/* BREAKFAST */}
       <Form.Item
-        name="hasBreakfast"
+        name="hasBreakFast"
         label="Breakfast"
         valuePropName="checked"
       >

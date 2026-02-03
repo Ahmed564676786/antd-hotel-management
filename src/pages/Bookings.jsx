@@ -225,7 +225,8 @@ import BookingForm from "../features/BookingForm";
 import dayjs from "dayjs";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getCabins } from "../services/apiCabins";
-import { getBookings, deleteBooking } from "../services/apiBookings";
+import { getBookings, deleteBooking,insertBooking } from "../services/apiBookings";
+import toast from "react-hot-toast";
 
 const { RangePicker } = DatePicker;
 
@@ -258,6 +259,28 @@ function Bookings() {
     },
   });
 
+
+
+  const { mutate: createBooking } = useMutation({
+  mutationFn: insertBooking,
+
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["bookings"] });
+    queryClient.invalidateQueries({ queryKey: ["cabins"] });
+
+    toast.success("Successfully Added");
+    setFiltered([]);
+    setOpen(false);
+    setEditingBooking(null);
+  },
+
+  onError: (err) => {
+    console.error(err);
+    toast.error(err?.message || "Insert failed");
+  },
+});
+
+
   /* =======================
      LOCAL STATE
   ======================= */
@@ -270,27 +293,16 @@ function Bookings() {
   ======================= */
   const handleSave = (booking) => {
 
-     queryClient.invalidateQueries({ queryKey: ["bookings"] });
-  queryClient.invalidateQueries({ queryKey: ["cabins"] });
 
+    if(editingBooking){
 
+      alert('Editing');
+    }else{
 
     
-    let updated;
-
-    if (editingBooking) {
-      updated = bookingsData.map((b) =>
-        b.id === booking.id ? booking : b
-      );
-    } else {
-      updated = [...(bookingsData || []), booking];
+      createBooking(booking);
     }
 
-    queryClient.setQueryData(["bookings"], updated);
-
-    setFiltered([]);
-    setOpen(false);
-    setEditingBooking(null);
   };
 
 
