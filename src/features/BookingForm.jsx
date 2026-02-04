@@ -14,17 +14,25 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { getCabins } from "../services/apiCabins";
 import { insertBooking } from "../services/apiBookings";
 import dayjs from "dayjs";
+import { useGetCabinPrice } from "./useGetCabinPrice";
 
 const { RangePicker } = DatePicker;
 
 function BookingForm({ booking, onSave }) {
+  
   const [form] = Form.useForm();
+
+  const cabinId = Form.useWatch("cabinId", form);
+
+  const { data: cabinPrice, isLoading } = useGetCabinPrice(cabinId);
+
+
 
   /* =======================
      WATCHED FIELDS
   ======================= */
   const hasBreakfast = Form.useWatch("hasBreakfast", form);
-  const cabinId = Form.useWatch("cabinId", form);
+
 
   /* =======================
      FETCH CABINS
@@ -69,21 +77,34 @@ function BookingForm({ booking, onSave }) {
   /* =======================
      AUTO PRICE CALCULATION
   ======================= */
+  // useEffect(() => {
+  
+
+  //   if (!price) return;
+
+  //   const extraPrice = hasBreakfast ? price || 0 : 0;
+  //   const totalPrice = (price || 0) + extraPrice;
+
+  //   form.setFieldsValue({
+  //     cabinPrice: price,
+  //     extraPrice,
+  //     totalPrice,
+  //   });
+  // }, [cabins, cabinId, hasBreakfast, form]);
+
+
+
   useEffect(() => {
-    if (!cabins || !cabinId) return;
+  if (!cabinPrice) return;
 
-    const cabin = cabins.find((c) => c.id === cabinId);
-    if (!cabin) return;
+  const extraPrice = hasBreakfast ? 50 : 0;
 
-    const extraPrice = hasBreakfast ? cabin.breakfastPrice || 0 : 0;
-    const totalPrice = (cabin.price || 0) + extraPrice;
-
-    form.setFieldsValue({
-      cabinPrice: cabin.price,
-      extraPrice,
-      totalPrice,
-    });
-  }, [cabins, cabinId, hasBreakfast, form]);
+  form.setFieldsValue({
+    cabinPrice,
+    extraPrice,
+    totalPrice: cabinPrice + extraPrice,
+  });
+}, [cabinPrice, hasBreakfast, form]);
 
   /* =======================
      SUBMIT HANDLER
@@ -136,7 +157,11 @@ function BookingForm({ booking, onSave }) {
             value: c.id,
             label: `${c.name} ($${c.price})`,
           }))}
+
+         
         />
+
+
       </Form.Item>
 
       {/* DATES */}

@@ -2,21 +2,15 @@ import supabase from './supabase.js'
 
 export async function getBookings() {
 
-
-
     let { data: bookings, error } = await supabase
         .from('bookings')
         .select('*');
-
-
     if(error){
-
 
         throw new Error(error.message);
     }
 
-    return bookings
-    
+    return bookings    
 }
 
 
@@ -65,14 +59,41 @@ export async function insertBooking(newBooking) {
     .select()
     .single();
 
-    
-
   if (error) throw new Error(error.message);
 
+  return data;
+   
+}
 
+
+export async function getCabinPrices() {
+  const { data, error } = await supabase
+    .from("cabins")
+    .select("id, name, price, discount");
+
+  if (error) {
+    console.error(error);
+    throw new Error("Failed to fetch cabin prices");
+  }
 
   return data;
-
-
-    
 }
+
+
+
+export async function getCabinById(cabinId) {
+  const { data, error } = await supabase
+    .from("cabins")
+    .select("id, name, price, discount")
+    .eq("id", cabinId)
+    .single(); // 👈 guarantees ONE ROW
+
+  if (error) {
+    console.error(error);
+    throw new Error("Cabin not found");
+  }
+
+  return data.price;
+}
+
+
