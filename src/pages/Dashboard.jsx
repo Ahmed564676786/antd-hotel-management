@@ -45,12 +45,12 @@ const Dashboard = () => {
         </Col>
         <Col span={8}>
           <Card>
-            <Statistic title="Available Rooms" value={45} valueStyle={{ color: '#3f8600' }} />
+            <Statistic title="Available Rooms" value={45} Style={{ color: '#3f8600' }} />
           </Card>
         </Col>
         <Col span={8}>
           <Card>
-            <Statistic title="Booked Rooms" value={75} valueStyle={{ color: '#cf1322' }} />
+            <Statistic title="Booked Rooms" value={75} Style={{ color: '#cf1322' }} />
           </Card>
         </Col>
       </Row>

@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { insertCabin } from '../services/apiCabins';
 
-const CabinFormDrawer = ({ visible, onClose, initialValues }) => {
+const CabinFormDrawer = ({ visible, onClose, initialValues,onSubmit }) => {
   const [form] = Form.useForm();
   const queryClient = useQueryClient();
 
@@ -13,20 +13,8 @@ const CabinFormDrawer = ({ visible, onClose, initialValues }) => {
     form.setFieldsValue(initialValues || {});
   }, [initialValues, form]);
 
-  const { mutate: addCabin, isLoading } = useMutation({
-    mutationFn: insertCabin,
-    onSuccess: () => {
-      toast.success('Cabin added successfully');
-      queryClient.invalidateQueries({ queryKey: ['cabins'] });
-      form.resetFields();
-      onClose();
-    },
-    onError: (err) => toast.error(err.message),
-  });
 
-  const handleFinish = (values) => {
-    addCabin(values);
-  };
+
 
   const handleClose = () => {
     form.resetFields();
@@ -44,13 +32,13 @@ const CabinFormDrawer = ({ visible, onClose, initialValues }) => {
           <Button onClick={handleClose} style={{ marginRight: 8 }}>
             Cancel
           </Button>
-          <Button type="primary" onClick={() => form.submit()} loading={isLoading}>
+          <Button type="primary" onClick={() => form.submit()} >
             {initialValues ? 'Update' : 'Add'}
           </Button>
         </div>
       }
     >
-      <Form layout="vertical" form={form} onFinish={handleFinish}>
+      <Form layout="vertical" form={form} onFinish={onSubmit}>
         <Form.Item
           name="name"
           label="Cabin Name"

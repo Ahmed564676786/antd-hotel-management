@@ -35,14 +35,12 @@ export async function deleteCabin(id){
 }
 
 
-
 export async function insertCabin(newCabin){
     // Insert a row
   const { data, error } = await supabase
   .from('cabins')
   .insert([newCabin])
   .select()
-
 
   if(error){
       throw new Error("Could not be inserted New Cabin");
@@ -51,4 +49,19 @@ export async function insertCabin(newCabin){
   return data;
 
 
+}
+
+export async function editCabin(id, updatedCabin) {
+  const { data, error } = await supabase
+    .from("cabins")
+    .update(updatedCabin)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error("Could not update cabin");
+  }
+  
+  return data;
 }

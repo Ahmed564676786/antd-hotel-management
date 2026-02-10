@@ -2,13 +2,17 @@ import React, { useState } from 'react';
 import { Button } from 'antd';
 import CabinsTable from '../features/CabinsTable';
 import CabinFormDrawer from '../features/CabinFormDrawer';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 
-import {getCabins} from '../services/apiCabins'
+import {getCabins, insertCabin} from '../services/apiCabins'
+
+
+import { useEditCabin } from "../hooks/useEditCabin";
+
 
 const CabinsPage = () => {
 
-
+  const { editCabin, isEditing } = useEditCabin();
    const {data:cabins,isLoading} = useQuery({
 
           queryKey:['cabins'],
@@ -16,11 +20,19 @@ const CabinsPage = () => {
    });
 
 
-  // const [cabins, setCabins] = useState([
-  //   { id: 1, name: 'Lake View Cabin', maxCapacity: 6, minCapacity: 2, price: 150, discount: 10 },
-  //   { id: 2, name: 'Mountain Cabin', maxCapacity: 8, minCapacity: 3, price: 200, discount: 15 },
-  //   { id: 3, name: 'Forest Cabin', maxCapacity: 4, minCapacity: 1, price: 120, discount: 5 },
-  // ]);
+
+  const { mutate: addCabin, isLoading:isAddingCabin } = useMutation({
+    mutationFn: insertCabin,
+    onSuccess: () => {
+      toast.success('Cabin added successfully');
+      queryClient.invalidateQueries({ queryKey: ['cabins'] });
+      form.resetFields();
+      onClose();
+    },
+    onError: (err) => toast.error(err.message),
+  });
+
+
 
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [editingCabin, setEditingCabin] = useState(null);
@@ -35,16 +47,24 @@ const CabinsPage = () => {
     setDrawerVisible(false);
   };
 
-  const handleSubmit = (data) => {
+  const handleSubmit = async (data) => {
     if (editingCabin) {
       // Update existing cabin
-      setCabins((prev) =>
-        prev.map((cabin) => (cabin.id === editingCabin.id ? { ...editingCabin, ...data } : cabin))
-      );
+
+      alert('Edit')
+
+
+      await editCabin({
+        id: editingCabin.id,
+        updatedCabin: data,
+      });
+
+
     } else {
       // Add new cabin
-      const newCabin = { id: Date.now(), ...data };
-      setCabins((prev) => [...prev, newCabin]);
+
+       addCabin(data);
+ 
     }
     closeDrawer();
   };
