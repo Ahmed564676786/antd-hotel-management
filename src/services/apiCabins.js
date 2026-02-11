@@ -48,10 +48,9 @@ export async function insertCabin(newCabin){
 
   return data;
 
-
 }
 
-export async function editCabin(id, updatedCabin) {
+export async function editCabin1(id, updatedCabin) {
   const { data, error } = await supabase
     .from("cabins")
     .update(updatedCabin)

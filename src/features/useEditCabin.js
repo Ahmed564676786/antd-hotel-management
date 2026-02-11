@@ -1,24 +1,27 @@
-import { useMutation } from "@tanstack/react-query";
-import { editCabin } from "../services/apiCabins";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { editCabin1 } from "../services/apiCabins";
+import { message } from "antd";
 
 
-export function useEditCabin(){
-
-    const queryClient = useQueryClient();
 
 
-    const { mutateAsync: editCabin,
-    isLoading: isEditing,
-    data} =  useMutation({
-        mutationFn:({id,editCabin}) => editCabin(id,editCabin),
-        mutationKey:["editcabin",id],
+export function useEditCabin() {
+  const queryClient = useQueryClient();
 
-        onSuccess: () => {
-                queryClient.invalidateQueries({ queryKey: ["cabins"] });
-        },
+
+
+    const {mutateAsync:editCabin,isPending:isEditing,data} = useMutation({
+
+            mutationFn:({id,updatedCabin})=>editCabin1(id,updatedCabin),
+            onSuccess: () => ( queryClient.invalidateQueries({
+                queryKey:["cabins"]
+            })),
+            onError:(error)=>{message.error(error)}
     });
 
      return { editCabin, isEditing, data };
 }
+
+
 
 

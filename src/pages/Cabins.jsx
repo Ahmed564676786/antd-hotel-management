@@ -3,16 +3,15 @@ import { Button } from 'antd';
 import CabinsTable from '../features/CabinsTable';
 import CabinFormDrawer from '../features/CabinFormDrawer';
 import { useMutation, useQuery } from '@tanstack/react-query';
-
 import {getCabins, insertCabin} from '../services/apiCabins'
-
-
-import { useEditCabin } from "../hooks/useEditCabin";
+import { useEditCabin } from "../features/useEditCabin";
 
 
 const CabinsPage = () => {
 
-  const { editCabin, isEditing } = useEditCabin();
+  const { editCabin, isEditing,data } = useEditCabin();
+
+
    const {data:cabins,isLoading} = useQuery({
 
           queryKey:['cabins'],
@@ -51,20 +50,16 @@ const CabinsPage = () => {
     if (editingCabin) {
       // Update existing cabin
 
-      alert('Edit')
+      alert('hi')
 
-
+      console.log(editingCabin.id)
       await editCabin({
         id: editingCabin.id,
         updatedCabin: data,
       });
 
-
     } else {
-      // Add new cabin
-
-       addCabin(data);
- 
+        addCabin(data);
     }
     closeDrawer();
   };
