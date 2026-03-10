@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Cabins from './pages/Cabins';
 import Bookings from './pages/Bookings';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import Login from './pages/Login';
 
 
 
@@ -36,6 +37,8 @@ const App = () => (
         {/* <Route path="videos" element={<Videos />} />
         <Route path="uploads" element={<Uploads />} /> */}
       </Route>
+
+      <Route path="/login" element={<Login/>}/>
     </Routes>
   </BrowserRouter>
 
